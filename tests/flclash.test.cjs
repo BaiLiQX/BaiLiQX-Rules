@@ -107,9 +107,16 @@ test('custom direct domains override business providers and are excluded from Gi
   assert.deepEqual(config['proxy-groups'].find(group => group.name === '国内直连').proxies, ['DIRECT']);
   const readRules = filename => fs.readFileSync(path.join(__dirname, '../Clash/rules/' + filename), 'utf8')
     .split(/\r?\n/).filter(line => /^\s+- /.test(line)).map(line => line.trim().slice(2));
-  const wanted = ['DOMAIN,doc.auto-mas.top', 'DOMAIN,riic.autos'];
-  assert.deepEqual(readRules('direct.yaml'), wanted);
-  for (const rule of wanted) assert.ok(!readRules('github.yaml').includes(rule), rule);
+  const wanted = [
+    'DOMAIN-SUFFIX,doc.auto-mas.top',
+    'DOMAIN-SUFFIX,riic.autos',
+    'DOMAIN-SUFFIX,pvidi.com',
+  ];
+  const directRules = readRules('direct.yaml');
+  assert.deepEqual(directRules, wanted);
+  assert.ok(directRules.every(rule => /^DOMAIN-SUFFIX,[a-z0-9.-]+$/.test(rule)),
+    'Direct rules must use valid DOMAIN-SUFFIX syntax');
+  for (const rule of directRules) assert.ok(!readRules('github.yaml').includes(rule), rule);
 });
 
 test('foreign DNS uses a GeoSite policy and AI precedes broader services', () => {
